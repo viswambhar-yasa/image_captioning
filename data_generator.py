@@ -51,13 +51,13 @@ def captions_generation(captions_dic, vocab_size, image_pth_rt, max_length=25, n
 
 if __name__ == "__main__":
     print('TensorFlow Version', tf.__version__)
-    captions_text_path = r'D:\STUDY_MATERIAL\image_captioning\Flicker8k_Dataset\text_files\Flickr8k.token.txt'
+    captions_text_path = r'.\Flicker8k_Dataset\text_files\Flickr8k.token.txt'
     captions_extraction = data_processing(captions_text_path)
-    trn_images_id_text = r'D:\STUDY_MATERIAL\image_captioning\Flicker8k_Dataset\text_files\Flickr_8k.trainImages.txt'
+    trn_images_id_text = r'.\Flicker8k_Dataset\text_files\Flickr_8k.trainImages.txt'
     train_cleaned_seq,train_cleaned_dic = captions_extraction.cleaning_sequencing_captions(trn_images_id_text)
-    val_images_id_text = r'D:\STUDY_MATERIAL\image_captioning\Flicker8k_Dataset\text_files\Flickr_8k.devImages.txt'
+    val_images_id_text = r'.\Flicker8k_Dataset\text_files\Flickr_8k.devImages.txt'
     val_cleaned_seq,val_cleaned_dic = captions_extraction.cleaning_sequencing_captions(val_images_id_text)
-    test_images_id_text = r'D:\STUDY_MATERIAL\image_captioning\Flicker8k_Dataset\text_files\Flickr_8k.testImages.txt'
+    test_images_id_text = r'.\Flicker8k_Dataset\text_files\Flickr_8k.testImages.txt'
     test_cleaned_seq,test_cleaned_dic = captions_extraction.cleaning_sequencing_captions(test_images_id_text)
     captions_extraction.tokenization(train_cleaned_seq, num_wrds=5000)
     print("No of captions: Training-" + str(len(train_cleaned_seq) / 5) + " Validation-" + str(
@@ -67,7 +67,7 @@ if __name__ == "__main__":
     val_cap_tok = captions_extraction.sentence_tokenizing(val_cleaned_dic)
     test_cap_tok = captions_extraction.sentence_tokenizing(test_cleaned_dic)
 
-    image_pth_rt = r"D:\STUDY_MATERIAL\image_captioning\Flicker8k_Dataset"+r"\\"
+    image_pth_rt = r".\Flicker8k_Dataset"+r"\\"
     trn_dataset = captions_generation(train_cap_tok, 5000, image_pth_rt)
     inputs, outputs = next(iter(trn_dataset))
     print(inputs[0].shape, inputs[1].shape, outputs.shape)

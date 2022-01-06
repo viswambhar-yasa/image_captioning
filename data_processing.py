@@ -62,13 +62,13 @@ class data_processing:
 
 if __name__ == "__main__":
     print('TensorFlow Version', tf.__version__)
-    captions_text_path = r'D:\STUDY_MATERIAL\image_captioning\Flicker8k_Dataset\text_files\Flickr8k.token.txt'
+    captions_text_path = r'.\Flicker8k_Dataset\text_files\Flickr8k.token.txt'
     captions_extraction = data_processing(captions_text_path)
-    trn_images_id_text = r'D:\STUDY_MATERIAL\image_captioning\Flicker8k_Dataset\text_files\Flickr_8k.trainImages.txt'
+    trn_images_id_text = r'.\Flicker8k_Dataset\text_files\Flickr_8k.trainImages.txt'
     train_cleaned_seq = captions_extraction.cleaning_sequencing_captions(trn_images_id_text)
-    val_images_id_text = r'D:\STUDY_MATERIAL\image_captioning\Flicker8k_Dataset\text_files\Flickr_8k.devImages.txt'
+    val_images_id_text = r'.\Flicker8k_Dataset\text_files\Flickr_8k.devImages.txt'
     val_cleaned_seq = captions_extraction.cleaning_sequencing_captions(val_images_id_text)
-    test_images_id_text = r'D:\STUDY_MATERIAL\image_captioning\Flicker8k_Dataset\text_files\Flickr_8k.testImages.txt'
+    test_images_id_text = r'.\Flicker8k_Dataset\text_files\Flickr_8k.testImages.txt'
     test_cleaned_seq = captions_extraction.cleaning_sequencing_captions(test_images_id_text)
     captions_extraction.tokenization(train_cleaned_seq, num_wrds=5000)
     print("No of captions: Training-"+str(len(train_cleaned_seq)/5)+" Validation-"+str(len(val_cleaned_seq)/5)+" test"+str(len(test_cleaned_seq)/5))
