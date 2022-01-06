@@ -1,15 +1,11 @@
-import numpy as np
 import tensorflow as tf
-from tensorflow.keras.layers import Conv2D, MaxPool2D, AveragePooling2D, Dropout, GlobalAveragePooling2D, Input, Dense, \
-    Embedding, LSTM, concatenate, BatchNormalization, Bidirectional
+from tensorflow.keras.layers import GlobalAveragePooling2D, Dense, Embedding, LSTM, BatchNormalization, Bidirectional
 from tensorflow.keras.applications import Xception, InceptionV3
-from tensorflow.keras.models import Model, Sequential
-from tensorflow.python.keras.layers.core import RepeatVector
-from tensorflow.python.keras.layers.recurrent import GRU, GRUCell, LSTMCell
-from tensorflow.python.training.tracking import base
+from tensorflow.keras.models import Model
+from tensorflow.python.keras.layers.recurrent import GRU
 
 
-def image_encoder(img_input, trainable_layers=0, CNN_Type='Xception', Embed_Size=256, disp=False):
+def image_encoder(img_input, trainable_layers=0, CNN_Type='Xception', Embed_Size=256, display=False):
     print('Building CNN model')
     if CNN_Type == 'Xception':
         cnn_pre_trained_model = Xception(include_top=False, weights='imagenet', input_tensor=img_input)
@@ -24,11 +20,11 @@ def image_encoder(img_input, trainable_layers=0, CNN_Type='Xception', Embed_Size
     base_model = cnn_pre_trained_model.output
     base_model = GlobalAveragePooling2D(name='global_average_pooling')(base_model)
     embed_image = tf.keras.layers.Dense(Embed_Size, activation='tanh', name='embed_image')(base_model)
-    feature_extration_model = Model(inputs=cnn_inputs, outputs=embed_image, name='CNN encoder model')
+    feature_extraction_model = Model(inputs=cnn_inputs, outputs=embed_image, name='CNN encoder model')
     print('CNN model {output shape}:', embed_image.shape)
-    if disp:
-        tf.keras.utils.plot_model(feature_extration_model, to_file='base_model.png', show_shapes=True)
-    return feature_extration_model
+    if display:
+        tf.keras.utils.plot_model(feature_extraction_model, to_file='base_model.png', show_shapes=True)
+    return feature_extraction_model
 
 
 def txt_decoder(rnn_input, Embed_Size=256, Bi_Direction=False, RNN_Type='LSTM', RNN_Layers=1):
@@ -61,9 +57,9 @@ def txt_decoder(rnn_input, Embed_Size=256, Bi_Direction=False, RNN_Type='LSTM', 
     return rnn_out
 
 
-def Caption_model_gen(NET, img_shape=(256, 256, 3), vocab_size=8763, Embed_Size=256, max_length=20, disp=False):
+def Caption_model_gen(NET, img_shape=(256, 256, 3), vocab_size=8763, Embed_Size=256, max_length=20, display=False):
     img_input = tf.keras.Input(shape=img_shape)
-    cnn_model = image_encoder(img_input, trainable_layers=0, CNN_Type='Xception', disp=False)
+    cnn_model = image_encoder(img_input, trainable_layers=0, CNN_Type='Xception', display=False)
     embed_image = tf.keras.layers.Dense(Embed_Size, activation='tanh')(cnn_model.output)
 
     text_input = tf.keras.Input(shape=(max_length,))
@@ -82,8 +78,8 @@ def Caption_model_gen(NET, img_shape=(256, 256, 3), vocab_size=8763, Embed_Size=
         policy_net_model = Model(inputs=[img_input, text_input], outputs=policy_net_output, name='Policy_Net')
 
         print('output {shape}', policy_net_output.shape)
-        print('Policy Net built successfully')
-        if disp:
+        print('Policy Net built successfully \n')
+        if display:
             tf.keras.utils.plot_model(policy_net_model, to_file='policy_net.png', show_shapes=True)
         return policy_net_model
     elif NET == 'value':
@@ -94,8 +90,8 @@ def Caption_model_gen(NET, img_shape=(256, 256, 3), vocab_size=8763, Embed_Size=
         value_net_outputs = Dense(1, activation='tanh', name='decoder_output')(hidden_layer_2)
         value_net_model = Model(inputs=[img_input, text_input], outputs=value_net_outputs, name='Value_Net')
         print('output {shape}', value_net_outputs.shape)
-        print('Value Net built successfully')
-        if disp:
+        print('Value Net built successfully \n')
+        if display:
             tf.keras.utils.plot_model(value_net_model, to_file='value_net.png', show_shapes=True)
         return value_net_model
     else:
@@ -105,12 +101,14 @@ def Caption_model_gen(NET, img_shape=(256, 256, 3), vocab_size=8763, Embed_Size=
         print('Text sequence vector shape:', text_sequence_vector.shape)
         reward_model = Model(inputs=[img_input, text_input], outputs=[feature_vector, text_sequence_vector],
                              name='reward net model')
-        print('Reward Net built successfully')
-        if disp:
+        print('Reward Net built successfully \n')
+        if display:
             tf.keras.utils.plot_model(reward_model, to_file='reward_net.png', show_shapes=True)
         return reward_model
 
 
 if __name__ == "__main__":
-    print(tf.__version__)
+    print('TensorFlow Version', tf.__version__)
     actor_model = Caption_model_gen('policy')
+    critic_model = Caption_model_gen('value')
+    reward = Caption_model_gen('reward')
