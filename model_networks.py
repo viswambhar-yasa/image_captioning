@@ -1,3 +1,8 @@
+## Image captioning using reinforcement learning
+### Policy to actor method on deep convolution and recurrent networks
+#### Project Seminar for artifical intelligence WS2021-22
+##### Authors : Viswambhar Yasa, Venkata Mukund
+# ## This file contains enocder and decoder function which are required to build policy, value and reward net
 import tensorflow as tf
 from tensorflow.keras.layers import GlobalAveragePooling2D, Dense, Embedding, LSTM, BatchNormalization, Bidirectional
 from tensorflow.keras.applications import Xception, InceptionV3,ResNet50
@@ -5,13 +10,27 @@ from tensorflow.keras.models import Model
 from tensorflow.python.keras.layers.recurrent import GRU
 
 def image_encoder(img_input, trainable_layers=0, CNN_Type='Xception', Embed_Size=512, display=False):
+    """
+    CNN encoder : creates a convolution layer based model
+    Args:
+        img_input (tuple): shape of the image
+        trainable_layers (int, optional): Creates a trainable layer in base model. Defaults to 0.
+        CNN_Type (str, optional): To select the base model. Defaults to 'Xception'.
+        Embed_Size (int, optional): The size of the feature vector. Defaults to 512.
+        display (bool, optional): displays the summary. Defaults to False.
+
+    Returns:
+        _type_: _description_
+    """
     print('Building CNN model')
+    # different type of base model
     if CNN_Type == 'Xception':
         cnn_pre_trained_model = Xception(include_top=False, weights='imagenet', input_tensor=img_input)
     elif CNN_Type =='ResNet':
       cnn_pre_trained_model =ResNet50(include_top=False,weights='imagenet',input_tensor=img_input,pooling='avg')
     else:
         cnn_pre_trained_model = InceptionV3(include_top=False, weights='imagenet', input_tensor=img_input)
+    # creates trainable layers 
     for i, layer in enumerate(cnn_pre_trained_model.layers):
         if len(cnn_pre_trained_model.layers) - i < trainable_layers:
             layer.trainable = True
@@ -19,6 +38,7 @@ def image_encoder(img_input, trainable_layers=0, CNN_Type='Xception', Embed_Size
             layer.trainable = False
     cnn_inputs = cnn_pre_trained_model.inputs
     base_model = cnn_pre_trained_model.output
+    # feature vector size based on base model
     if CNN_Type=='ResNet':
       embed_image = tf.keras.layers.Dense(Embed_Size, activation='relu', name='embed_image')(base_model)
     else:
@@ -31,6 +51,18 @@ def image_encoder(img_input, trainable_layers=0, CNN_Type='Xception', Embed_Size
 
 
 def txt_decoder(rnn_input, Embed_Size=256, Bi_Direction=False, RNN_Type='LSTM', RNN_Layers=2):
+    """
+    Decoder : creates a recurrent layer 
+    Args:
+        rnn_input (int): size of the recurrent layer
+        Embed_Size (int, optional): size of the embedding layer. Defaults to 256.
+        Bi_Direction (bool, optional): Bi-directional layer options. Defaults to False.
+        RNN_Type (str, optional): Type of recurrent neural network. Defaults to 'LSTM'.
+        RNN_Layers (int, optional): Number of recurrent neural network. Defaults to 2.
+
+    Returns:
+        _type_: _description_
+    """
     print('Building RNN model')
     for i in range(RNN_Layers):
         x = BatchNormalization()(rnn_input)
@@ -61,6 +93,21 @@ def txt_decoder(rnn_input, Embed_Size=256, Bi_Direction=False, RNN_Type='LSTM', 
 
 
 def Caption_model_gen(NET,Embedding_layer=None, img_shape=(256, 256, 3), vocab_size=5000, Embed_Size=256, max_length=20, display=False):
+    """
+    created encoder-decoder based model 
+
+    Args:
+        NET (_type_): Type of net (policy,value, reward)
+        Embedding_layer (_type_, optional): size of the embedding layer. Defaults to None.
+        img_shape (tuple, optional): shape of the input image. Defaults to (256, 256, 3).
+        vocab_size (int, optional): size of the vocabulary . Defaults to 5000.
+        Embed_Size (int, optional): _description_. Defaults to 256.
+        max_length (int, optional): max length of the captions. Defaults to 20.
+        display (bool, optional): to plot archiecture of the model. Defaults to False.
+
+    Returns:
+        _type_: _description_
+    """
     img_input = tf.keras.Input(shape=img_shape)
     cnn_model = image_encoder(img_input, trainable_layers=0, CNN_Type='Xception', display=False)
     embed_image = tf.keras.layers.Dense(Embed_Size, activation='tanh')(cnn_model.output)

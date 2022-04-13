@@ -1,11 +1,24 @@
+## Image captioning using reinforcement learning
+### Policy to actor method on deep convolution and recurrent networks
+#### Project Seminar for artifical intelligence WS2021-22
+##### Authors : Viswambhar Yasa, Venkata Mukund
+## This file contains functions which generate input and output data dynamically during training 
 import tensorflow as tf
-from keras.preprocessing.image import load_img, img_to_array
-from keras.applications.inception_v3 import InceptionV3, preprocess_input
+from tensorflow.keras.preprocessing.image import load_img, img_to_array
+from tensorflow.keras.applications.inception_v3 import InceptionV3, preprocess_input
 import numpy as np
 from data_processing import data_processing
 
 
 def load_preprocess_img(img_path):
+    """
+    Converts image size and performs scaling 
+    Args:
+        img_path (_type_): path of the image
+
+    Returns:
+        _type_: scaled image
+    """
     img = load_img(img_path, target_size=(256, 256, 3))
     x = img_to_array(img)
     x /= 255.0
@@ -13,10 +26,27 @@ def load_preprocess_img(img_path):
 
 
 def captions_generation_reward(captions_dic, vocab_size, image_pth_rt, max_length=25, num_photos_per_batch=5, num_captions=1):
+    """
+    Generates innput and output dynamically during training for reward net 
+    
+    modified version taken from tensorflow website
+    Args:
+        captions_dic (dic): image and caption dictionary
+        vocab_size (int): size of the vocabulary 
+        image_pth_rt (str): path of the images
+        max_length (int, optional): Maximum length of the caption. Defaults to 25.
+        num_photos_per_batch (int, optional): Numver of images per each epoch. Defaults to 5.
+        num_captions (int, optional): Number of captions for each image. Defaults to 1.
+
+    Yields:
+        _type_: _description_
+    """
+    # creating containers to store data
     images, input_text_seq = list(), list()
     batch_iter = 0
     batch_keys = []
     while True:
+        # looping over caption dictionary
         for key, desc_list in captions_dic.items():
             # print(key)
             batch_keys.append(key)
@@ -28,6 +58,7 @@ def captions_generation_reward(captions_dic, vocab_size, image_pth_rt, max_lengt
                 caption += 1
                 desc = np.squeeze(desc)
                 input_sequence = []
+                # padding the sequence to obtain a fixed length input
                 input_seq = tf.keras.preprocessing.sequence.pad_sequences([desc], maxlen=max_length,
                                                                           padding='post')
                 input_text_seq.append(input_seq)
@@ -41,6 +72,21 @@ def captions_generation_reward(captions_dic, vocab_size, image_pth_rt, max_lengt
                 batch_iter = 0
 
 def captions_generation_policy(captions_dic, vocab_size, image_pth_rt, max_length=25, num_photos_per_batch=5, num_captions=1):
+    """ 
+    Generates innput and output dynamically during training for policy net
+
+    modified version taken from tensorflow website
+    Args:
+        captions_dic(dic): image and caption dictionary
+        vocab_size(int): size of the vocabulary
+        image_pth_rt(str): path of the images
+        max_length(int, optional): Maximum length of the caption. Defaults to 25.
+        num_photos_per_batch(int, optional): Numver of images per each epoch. Defaults to 5.
+        num_captions(int, optional): Number of captions for each image. Defaults to 1.
+
+    Yields:
+        _type_: _description_
+    """
     images, input_text_seq, output_text = list(), list(), list()
     batch_iter = 0
     batch_keys = []
@@ -101,6 +147,6 @@ if __name__ == "__main__":
     test_cap_tok = captions_extraction.sentence_tokenizing(test_cleaned_dic)
 
     image_pth_rt = r".\Flicker8k_Dataset"+r"\\"
-    trn_dataset = captions_generation(train_cap_tok, 5000, image_pth_rt)
+    trn_dataset = captions_generation_policy(train_cap_tok, 5000, image_pth_rt)
     inputs, outputs = next(iter(trn_dataset))
     print(inputs[0].shape, inputs[1].shape, outputs.shape)
