@@ -39,6 +39,49 @@ def captions_generation_reward(captions_dic, vocab_size, image_pth_rt, max_lengt
                 yield [np.array(images), np.array(input_text_seq)]
                 images, input_text_seq = list(), list()
                 batch_iter = 0
+
+def captions_generation_policy(captions_dic, vocab_size, image_pth_rt, max_length=25, num_photos_per_batch=5, num_captions=1):
+    images, input_text_seq, output_text = list(), list(), list()
+    batch_iter = 0
+    batch_keys = []
+    while True:
+        for key, desc_list in captions_dic.items():
+            # print(key)
+            batch_keys.append(key)
+            batch_iter += 1
+            caption = 0
+            # retrieve the photo feature
+
+            photo = load_preprocess_img(image_pth_rt + key)
+            
+            for desc in desc_list:
+                caption += 1
+                desc = np.squeeze(desc)
+                input_sequence = []
+                out_text=[]
+                for i in range(0, len(desc)-1):
+                    input_sequence.append(desc[:i ])
+                    out_text.append(desc[i+1])
+                    images.append(photo)
+                
+                input_seq = tf.keras.preprocessing.sequence.pad_sequences(input_sequence, maxlen=max_length,
+                                                                          padding='post')
+                #input_text = input_seq[:, :-1]
+                #out_text = input_seq[:, -1]
+                output_sequence = tf.keras.utils.to_categorical(out_text, num_classes=vocab_size)
+                input_text_seq.append(input_seq)
+                output_text.append(output_sequence)
+                if caption == num_captions:
+                    break
+            if batch_iter == num_photos_per_batch:
+                input_text_seq = np.concatenate(input_text_seq)
+                output_text = np.concatenate(output_text)
+                #print(batch_keys[-5:])
+                yield [[np.array(images), np.array(input_text_seq)], np.array(output_text)]
+                images, input_text_seq, output_text = list(), list(), list()
+                batch_iter = 0
+
+                
 if __name__ == "__main__":
     print('TensorFlow Version', tf.__version__)
     captions_text_path = r'.\Flicker8k_Dataset\text_files\Flickr8k.token.txt'
