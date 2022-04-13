@@ -1,2 +1,2 @@
 # image_captioning
-image captioning using reinforecement learning
+Using reinforcement learning coupled with convolution based recurrent neural network
